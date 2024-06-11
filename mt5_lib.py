@@ -234,7 +234,14 @@ def Williams_R(df, n):
     df['WR'] = wr
     return df
 
+
 def calculate_targets(df, n):
+    """
+    Calculate target values for a given DataFrame and period length.
+    :param df: DataFrame containing price data.
+    :param n: Period length for target calculation.
+    :return: DataFrame with target values.
+    """
     targets = []
     price = list(df['prev_close'])
 
@@ -249,9 +256,11 @@ def calculate_targets(df, n):
 
 
 def On_Balance_Volume(df):
-    '''
-    On Balance Volume
-    '''
+    """
+    Calculate On Balance Volume (OBV) for a given DataFrame.
+    :param df: DataFrame containing price and volume data.
+    :return: DataFrame with OBV values.
+    """
     obv = []
     price = list(df['close'])
     volume = list(df['tick_volume'])
@@ -271,12 +280,23 @@ def On_Balance_Volume(df):
     df['OBV'] = obv
     return df
 
+
 def calculate_ewma(df):
+    """
+    Calculate Exponential Weighted Moving Average (EWMA) for a given DataFrame.
+    :param df: DataFrame containing price data.
+    :return: DataFrame with EWMA values.
+    """
     df["EWMA"] = pd.Series.ewm(df['prev_close'], com=0.5, adjust=True, min_periods=0, ignore_na=False).mean()
     return df
 
 
 def detrend(df):
+    """
+    Detrend price data for a given DataFrame.
+    :param df: DataFrame containing price data.
+    :return: DataFrame with detrended price values.
+    """
     trend = None
     price = list(df['prev_close'])
 
@@ -291,14 +311,30 @@ def detrend(df):
     df['detrendedClose'] = trend
     return df
 
-def kelner(df, kc_lookback=20, multiplier=2, atr_lookback=10, plot=False):
-    df['kc_middle'], df['kc_upper'], df['kc_lower'] = get_kc(df['prev_high'], df['prev_low'], df['prev_close'], kc_lookback, multiplier, atr_lookback)
-    df['kc_signal'] = implement_kc_strategy(df['close'], df['kc_upper'], df['kc_lower'])
-    if plot:
-        plot_kelner(df)
-    return df
+
+#def kelner(df, kc_lookback=20, multiplier=2, atr_lookback=10, plot=False):
+    """
+    Calculate Keltner Channels for a given DataFrame.
+    :param df: DataFrame containing price data.
+    :param kc_lookback: Lookback period for Keltner Channels.
+    :param multiplier: Multiplier for Keltner Channels.
+    :param atr_lookback: Lookback period for ATR calculation.
+    :param plot: Boolean to indicate whether to plot the channels.
+    :return: DataFrame with Keltner Channel values.
+    """
+    #df['kc_middle'], df['kc_upper'], df['kc_lower'] = get_kc(df['prev_high'], df['prev_low'], df['prev_close'],
+                                                              #kc_lookback, multiplier, atr_lookback)
+    #df['kc_signal'] = implement_kc_strategy(df['close'], df['kc_upper'], df['kc_lower'])
+    #if plot:
+    #    plot_kelner(df)
+    #return df
+
 
 def plot_kelner(df):
+    """
+    Plot Keltner Channels with close prices.
+    :param df: DataFrame containing price and Keltner Channel data.
+    """
     plt.plot(df['prev_close'], linewidth=2, label='INTC')
     plt.plot(df['kc_upper'], linewidth=2, color='orange', linestyle='--', label='KC UPPER 20')
     plt.plot(df['kc_middle'], linewidth=1.5, color='grey', label='KC MIDDLE 20')
@@ -307,7 +343,16 @@ def plot_kelner(df):
     plt.title('INTC KELTNER CHANNEL 20 TRADING SIGNALS')
     plt.show()
 
+
 def get_adx(high, low, close, lookback):
+    """
+    Calculate Average Directional Index (ADX) for a given DataFrame.
+    :param high: Series containing high prices.
+    :param low: Series containing low prices.
+    :param close: Series containing close prices.
+    :param lookback: Lookback period for ADX calculation.
+    :return: Tuple containing plus DI, minus DI, and ADX values.
+    """
     plus_dm = high.diff()
     minus_dm = low.diff()
     plus_dm[plus_dm < 0] = 0
@@ -327,24 +372,34 @@ def get_adx(high, low, close, lookback):
     adx_smooth = adx.ewm(alpha=1 / lookback).mean()
     return plus_di, minus_di, adx_smooth
 
-def ADX_data_prev(df, adx_period = 14, plot=False):
-    df['ADX'] = pd.DataFrame(get_adx(df['prev_high'], df['prev_low'], df['prev_close'], adx_period)[2]).rename(columns={0: 'ADX'})
+
+def ADX_data_prev(df, adx_period=14, plot=False):
+    """
+    Calculate ADX data for a given DataFrame with previous period values.
+    :param df: DataFrame containing price data.
+    :param adx_period: Period for ADX calculation.
+    :param plot: Boolean to indicate whether to plot the ADX data.
+    :return: DataFrame with ADX values.
+    """
+    df['ADX'] = pd.DataFrame(get_adx(df['prev_high'], df['prev_low'], df['prev_close'], adx_period)[2]).rename(
+        columns={0: 'ADX'})
     df['PLUS_DI'] = pd.DataFrame(get_adx(df['prev_high'], df['prev_low'], df['prev_close'], adx_period)[0]).rename(
         columns={0: 'PLUS_DI'})
     df['MINUS_DI'] = pd.DataFrame(get_adx(df['prev_high'], df['prev_low'], df['prev_close'], adx_period)[1]).rename(
         columns={0: 'MINUS_DI'})
-    df['ADX_signal'] = pd.DataFrame(implement_adx_strategy(df['prev_close'], df['PLUS_DI'], df['MINUS_DI'], df['ADX'])).rename(columns={0: 'ADX_signal'})
+    df['ADX_signal'] = pd.DataFrame(
+        implement_adx_strategy(df['prev_close'], df['PLUS_DI'], df['MINUS_DI'], df['ADX'])).rename(
+        columns={0: 'ADX_signal'})
     if plot:
         plot_adx(df)
     return df
 
-def ADX_data_prev(df, adx_period = 14, plot=False):
-    df['ADX'] = pd.DataFrame(get_adx(df['prev_high'], df['prev_low'], df['prev_close'], adx_period)[2]).rename(columns={0: 'ADX'})
-    if plot:
-        plot_adx(df)
-    return df
 
 def plot_adx_prev(df):
+    """
+    Plot ADX with close prices.
+    :param df: DataFrame containing price and ADX data.
+    """
     ax1 = plt.subplot2grid((11, 1), (0, 0), rowspan=5, colspan=1)
     ax2 = plt.subplot2grid((11, 1), (6, 0), rowspan=5, colspan=1)
     ax1.plot(df['prev_close'], linewidth=3, color='#ff9800', alpha=0.6)
@@ -357,11 +412,20 @@ def plot_adx_prev(df):
     ax2.set_title('df ADX 14')
     plt.show()
 
+
 def implement_adx_strategy(prices, pdi, ndi, adx):
+    """
+    Implement ADX trading strategy.
+    :param prices: Series containing close prices.
+    :param pdi: Series containing plus DI values.
+    :param ndi: Series containing minus DI values.
+    :param adx: Series containing ADX values.
+    :return: List of trading signals based on ADX strategy.
+    """
     adx_signal = [0]
     signal = 0
 
-    for i in range(1,len(prices)):
+    for i in range(1, len(prices)):
         if adx[i - 1] < 25 and adx[i] > 25 and pdi[i] > ndi[i]:
             if signal != 1:
                 signal = 1
@@ -375,28 +439,31 @@ def implement_adx_strategy(prices, pdi, ndi, adx):
             else:
                 adx_signal.append(signal)
         else:
-            adx_signal.append(adx_signal[i-1])
+            adx_signal.append(adx_signal[i - 1])
     return adx_signal
 
+
 def Supertrend(df, atr_period, multiplier):
+    """
+    Calculate Supertrend indicator for a given DataFrame.
+    :param df: DataFrame containing price data.
+    :param atr_period: Period for ATR calculation.
+    :param multiplier: Multiplier for Supertrend calculation.
+    :return: DataFrame with Supertrend values.
+    """
     high = df['prev_high']
     low = df['prev_low']
     close = df['prev_close']
 
     # calculate ATR
-    price_diffs = [high - low,
-                   high - close.shift(),
-                   close.shift() - low]
+    price_diffs = [high - low, high - close.shift(), close.shift() - low]
     true_range = pd.concat(price_diffs, axis=1)
     true_range = true_range.abs().max(axis=1)
-    # default ATR calculation in supertrend indicator
     atr = true_range.ewm(alpha=1 / atr_period, min_periods=atr_period).mean()
-    # df['atr'] = df['tr'].rolling(atr_period).mean()
 
     # HL2 is simply the average of high and low prices
     hl2 = (high + low) / 2
     # upperband and lowerband calculation
-    # notice that final bands are set to be equal to the respective bands
     final_upperband = upperband = hl2 + (multiplier * atr)
     final_lowerband = lowerband = hl2 - (multiplier * atr)
 
@@ -406,23 +473,18 @@ def Supertrend(df, atr_period, multiplier):
     for i in range(1, len(df.index)):
         curr, prev = i, i - 1
 
-        # if current close price crosses above upperband
         if close[curr] > final_upperband[prev]:
             supertrend[curr] = True
-        # if current close price crosses below lowerband
         elif close[curr] < final_lowerband[prev]:
             supertrend[curr] = False
-        # else, the trend continues
         else:
             supertrend[curr] = supertrend[prev]
 
-            # adjustment to the final bands
             if supertrend[curr] == True and final_lowerband[curr] < final_lowerband[prev]:
                 final_lowerband[curr] = final_lowerband[prev]
             if supertrend[curr] == False and final_upperband[curr] > final_upperband[prev]:
                 final_upperband[curr] = final_upperband[prev]
 
-        # to remove bands according to the trend direction
         if supertrend[curr] == True:
             final_upperband[curr] = np.nan
         else:
@@ -434,9 +496,17 @@ def Supertrend(df, atr_period, multiplier):
         'Final Upperband': final_upperband
     }, index=df.index)
 
-def get_supertrend2(high, low, close, lookback, multiplier):
-    # ATR
 
+def get_supertrend2(high, low, close, lookback, multiplier):
+    """
+    Calculate Supertrend indicator with a different approach.
+    :param high: Series containing high prices.
+    :param low: Series containing low prices.
+    :param close: Series containing close prices.
+    :param lookback: Lookback period for calculation.
+    :param multiplier: Multiplier for Supertrend calculation.
+    :return: Tuple containing Supertrend, upper band, and lower band DataFrames.
+    """
     tr1 = pd.DataFrame(high - low)
     tr2 = pd.DataFrame(abs(high - close.shift(1)))
     tr3 = pd.DataFrame(abs(low - close.shift(1)))
@@ -444,13 +514,10 @@ def get_supertrend2(high, low, close, lookback, multiplier):
     tr = pd.concat(frames, axis=1, join='inner').max(axis=1)
     atr = tr.ewm(lookback).mean()
 
-    # H/L AVG AND BASIC UPPER & LOWER BAND
-
     hl_avg = (high + low) / 2
     upper_band = (hl_avg + multiplier * atr).dropna()
     lower_band = (hl_avg - multiplier * atr).dropna()
 
-    # FINAL UPPER BAND
     final_bands = pd.DataFrame(columns=['upper', 'lower'])
     final_bands.iloc[:, 0] = [x for x in upper_band - upper_band]
     final_bands.iloc[:, 1] = final_bands.iloc[:, 0]
@@ -463,8 +530,6 @@ def get_supertrend2(high, low, close, lookback, multiplier):
             else:
                 final_bands.iloc[i, 0] = final_bands.iloc[i - 1, 0]
 
-    # FINAL LOWER BAND
-
     for i in range(len(final_bands)):
         if i == 0:
             final_bands.iloc[i, 1] = 0
@@ -473,8 +538,6 @@ def get_supertrend2(high, low, close, lookback, multiplier):
                 final_bands.iloc[i, 1] = lower_band[i]
             else:
                 final_bands.iloc[i, 1] = final_bands.iloc[i - 1, 1]
-
-    # SUPERTREND
 
     supertrend = pd.DataFrame(columns=[f'supertrend_{lookback}'])
     supertrend.iloc[:, 0] = [x for x in final_bands['upper'] - final_bands['upper']]
@@ -494,14 +557,8 @@ def get_supertrend2(high, low, close, lookback, multiplier):
     supertrend = supertrend.set_index(upper_band.index)
     supertrend = supertrend.dropna()[1:]
 
-    # ST UPTREND/DOWNTREND
-
     upt = []
     dt = []
-    """"
-    print(close)
-    close = close.iloc[len(close) - len(supertrend):]
-    print(close)"""
 
     for i in range(len(supertrend)):
         if close[i] > supertrend.iloc[i, 0]:
@@ -514,48 +571,86 @@ def get_supertrend2(high, low, close, lookback, multiplier):
             upt.append(np.nan)
             dt.append(np.nan)
 
-    st, upt, dt = pd.DataFrame(supertrend.iloc[:, 0]), pd.DataFrame(upt).rename(columns={0: 'upt'}), pd.DataFrame(dt).rename(columns={0: 'dt'})
+    st, upt, dt = pd.DataFrame(supertrend.iloc[:, 0]), pd.DataFrame(upt).rename(columns={0: 'upt'}), pd.DataFrame(
+        dt).rename(columns={0: 'dt'})
     st = st.rename(columns={0: 'supertrend'})
     upt.index, dt.index = supertrend.index, supertrend.index
 
     return st, upt, dt
 
+
 def vwap(g):
-   g['tp'] = (g['low'] + g['close'] + g['high']) / 3
-   g['vwap'] = (g.tp * g.real_volume).cumsum() / g.real_volume.cumsum()
-   return g
+    """
+    Calculate Volume Weighted Average Price (VWAP) for a given DataFrame.
+    :param g: DataFrame containing price and volume data.
+    :return: DataFrame with VWAP values.
+    """
+    g['tp'] = (g['low'] + g['close'] + g['high']) / 3
+    g['vwap'] = (g.tp * g.real_volume).cumsum() / g.real_volume.cumsum()
+    return g
 
 
 def VWAP_function(df, plot=False):
+    """
+    Calculate VWAP for a given DataFrame and optionally plot it.
+    :param df: DataFrame containing price and volume data.
+    :param plot: Boolean to indicate whether to plot the VWAP.
+    :return: DataFrame with VWAP values.
+    """
     copy_df = df.copy()
     copy_df['tp'] = (copy_df['low'] + copy_df['close'] + copy_df['high']) / 3
-    copy_df['time'] =pd.to_datetime(copy_df['time'], unit ='s')
+    copy_df['time'] = pd.to_datetime(copy_df['time'], unit='s')
     copy_df['day'] = copy_df['time'].dt.day
-    copy_df = copy_df.groupby(pd.Grouper(key ='day')).apply(lambda x: vwap(x))
+    copy_df = copy_df.groupby(pd.Grouper(key='day')).apply(lambda x: vwap(x))
     det = copy_df['vwap'].droplevel(level='day')
     df['vwap'] = det
-    df['vwap_distance'] = abs(df['vwap']-df['close'])
+    df['vwap_distance'] = abs(df['vwap'] - df['close'])
     if plot:
         vwap_plot(df)
     return df
 
+
 def vwap_new(data):
-    data['vwap'] = (((data['high'] + data['low'] + data['close']) / 3) * data['tick_volume']).cumsum() / data['tick_volume'].cumsum()
+    """
+    Calculate VWAP for a given DataFrame.
+    :param data: DataFrame containing price and volume data.
+    :return: DataFrame with VWAP values.
+    """
+    data['vwap'] = (((data['high'] + data['low'] + data['close']) / 3) * data['tick_volume']).cumsum() / data[
+        'tick_volume'].cumsum()
     return data
 
+
 def vwap_code(df):
+    """
+    Calculate VWAP using a different method.
+    :param df: DataFrame containing price and volume data.
+    :return: DataFrame with VWAP values.
+    """
     q = df.tick_volume.values
     p = df.close.values
     return df.assign(vwap=(p * q).cumsum() / q.cumsum())
 
+
 def vwap_plot(df):
-     plt.plot(df['close'], linewidth=2, label='close')
-     plt.plot(df['vwap'], linewidth=2, color='orange', linestyle='--', label='vwap')
-     plt.legend(loc='lower right')
-     plt.title('Close vwap CHANNEL')
-     plt.show()
+    """
+    Plot VWAP with close prices.
+    :param df: DataFrame containing price and VWAP data.
+    """
+    plt.plot(df['close'], linewidth=2, label='close')
+    plt.plot(df['vwap'], linewidth=2, color='orange', linestyle='--', label='vwap')
+    plt.legend(loc='lower right')
+    plt.title('Close VWAP CHANNEL')
+    plt.show()
+
 
 def EMA(df, longest_MA_window=200):
+    """
+    Calculate Exponential Moving Averages (EMA) and Simple Moving Averages (SMA) for a given DataFrame.
+    :param df: DataFrame containing price data.
+    :param longest_MA_window: Window for the longest SMA.
+    :return: DataFrame with EMA and SMA values.
+    """
     df["14EMA"] = TA.EMA(df, 14)
     df["21EMA"] = TA.EMA(df, 21)
     df["30EMA"] = TA.EMA(df, 30)
@@ -564,7 +659,13 @@ def EMA(df, longest_MA_window=200):
     df['4SMA'] = df.rolling(4).mean()['close']
     return df
 
+
 def ATRMACD(df):
+    """
+    Calculate ATR, Bollinger Bands, MACD, and RSI for a given DataFrame.
+    :param df: DataFrame containing price data.
+    :return: DataFrame with ATR, Bollinger Bands, MACD, and RSI values.
+    """
     df["ATR"] = TA.ATR(df)
     bbands_df = TA.BBANDS(df)
     macd_df = TA.MACD(df)
@@ -576,16 +677,17 @@ def ATRMACD(df):
 
 
 def Signal(df):
-    #discrete_features = ["Bollinger_Bands_Above_Upper_BB", "Bollinger_Bands_Below_Lower_BB",
-    #                     "9EMA/20EMA_Cross, 9EMA>20EMA", "9EMA/20EMA_Cross, 9EMA<20EMA",
-    #                     "50EMA/200SMA_Cross, 50EMA>200SMA", "50EMA/200SMA_Cross, 50EMA<200SMA", "RSI_Over_70",
-    #                     "RSI_Under_30", "VWAP_Cross_From_Above", "VWAP_Cross_From_Below", "SUPER_UP", 'SUPER_DOWN', 'PIVOTS', 'ADX_UP', 'ADX_DOWN','HIGH','LOW']
-
+    """
+    Generate trading signals based on various technical indicators.
+    :param df: DataFrame containing price data and technical indicators.
+    :return: DataFrame with trading signals.
+    """
     discrete_features = ["Bollinger_Bands_Above_Upper_BB", "Bollinger_Bands_Below_Lower_BB",
-                         "RSI_Over_70","50EMA/200SMA_Cross, 50EMA>200SMA",
+                         "RSI_Over_70", "50EMA/200SMA_Cross, 50EMA>200SMA",
                          "RSI_Under_30", "VWAP_Cross_From_Above", "VWAP_Cross_From_Below", "SUPER_UP", 'SUPER_DOWN',
-                         'PIVOTS', 'HIGH','LOW','ADX_UP', 'ADX_DOWN', 'DOJI', 'Direction','Chaiken_Signal',"14EMA/21EMA_Cross, 14EMA>21EMA",'MACD_Signal'
-                         ,'green body> 500','red body> 500','slope_signal','slope_vwap']
+                         'PIVOTS', 'HIGH', 'LOW', 'ADX_UP', 'ADX_DOWN', 'DOJI', 'Direction', 'Chaiken_Signal',
+                         "14EMA/21EMA_Cross, 14EMA>21EMA", 'MACD_Signal',
+                         'green body> 500', 'red body> 500', 'slope_signal', 'slope_vwap']
 
     for feature in discrete_features:
         df[feature] = 0.0
@@ -599,14 +701,8 @@ def Signal(df):
     df['SUPER_UP'] = np.where(~df['dt'].isna(), 1, 0)
     df['SUPER_DOWN'] = np.where(~df['upt'].isna(), 1, 0)
 
-    # Use .loc to set values and avoid SettingWithCopyWarning
-    # Use .iloc to set values by position and avoid TypeError
     df["14EMA/21EMA_Cross, 14EMA>21EMA"][14:] = np.where(df["14EMA"][14:] > df["21EMA"][14:], 1.0, 0.0)
-
-    #df["14EMA/21EMA_Cross, 14EMA<21EMA"][14:] = np.where(df["14EMA"][14:] < df["21EMA"][14:], 1.0, 0.0)
-
     df["50EMA/200SMA_Cross, 50EMA>200SMA"][50:] = np.where(df["50EMA"][50:] > df["200SMA"][50:], 1.0, 0.0)
-    #df["50EMA/200SMA_Cross, 50EMA<200SMA"][50:] = np.where(df["50EMA"][50:] < df["200SMA"][50:], 1.0, 0.0)
 
     for index, row in df.iterrows():
         if 30 > row["RSI"]:
@@ -614,12 +710,10 @@ def Signal(df):
         if 70 < row["RSI"]:
             df.loc[index, "RSI_Over_70"] = 1
 
-    df["VWAP_Cross_From_Above"] = np.where(
-        df["vwap"] <= df["close"], 1.0, 0)
-    df["VWAP_Cross_From_Below"] = np.where(
-        df["vwap"] > df["close"], 1.0, 0)
+    df["VWAP_Cross_From_Above"] = np.where(df["vwap"] <= df["close"], 1.0, 0)
+    df["VWAP_Cross_From_Below"] = np.where(df["vwap"] > df["close"], 1.0, 0)
 
-    df['PIVOTS'] = np.where(df['distancebetweenpivot'] < 10 , 1, 0)
+    df['PIVOTS'] = np.where(df['distancebetweenpivot'] < 10, 1, 0)
     df['ADX_UP'] = np.where((df['ADX'] > 25) & (df['PLUS_DI'] > df['MINUS_DI']), 1, 0)
     df['ADX_DOWN'] = np.where((df['ADX'] > 25) & (df['PLUS_DI'] < df['MINUS_DI']), 1, 0)
     df['HIGH'] = np.where(df['high'].shift(1) < df['high'], 1, 0)
@@ -629,9 +723,8 @@ def Signal(df):
     doji_condition = (body_size < 0.1 * total_range)
     df['DOJI'] = np.where(doji_condition, 1, 0)
     df['Direction'] = np.where(df['close'] > df['open'], 1, 0)
-    df['Chaiken_Signal']= np.where(df['Chaikin']>0, 1, 0)
-    #df['CCI_sell'] = np.where(df['CCI'] > 100 , 1, 0)
-    #df['CCI_buy'] = np.where(df['CCI'] < -100, 1, 0)
+    df['Chaiken_Signal'] = np.where(df['Chaikin'] > 0, 1, 0)
+
     green_candle_condition = (df['close'] > df['open'])
     red_candle_condition = (df['close'] < df['open'])
     body_size_condition = (body_size > 500)
@@ -641,148 +734,146 @@ def Signal(df):
     df['HIGH2'] = np.where((df['high'] > df['high'].shift(1)) & (df['high'].shift(1) > df['high'].shift(2)), 1, 0)
     df['LOW2'] = np.where((df['low'] < df['low'].shift(1)) & (df['low'].shift(1) < df['low'].shift(2)), 1, 0)
     df = channel(df, 20, 40)
-    df['Superup_close'] = np.where(abs(df['upt']-df['low'])<50 , 1 , 0)
+    df['Superup_close'] = np.where(abs(df['upt'] - df['low']) < 50, 1, 0)
     df['Superdown_close'] = np.where(abs(df['dt'] - df['high']) < 50, 1, 0)
-    df['slope'] = np.degrees(np.arctan(df['4SMA'].diff()/4))
+    df['slope'] = np.degrees(np.arctan(df['4SMA'].diff() / 4))
     df['slope_signal'] = np.where(df['slope'] > 0, 1, 0)
 
-    # Calculate the difference in vwap between consecutive candles
     vwap_diff = df['vwap'].diff()
-
-    # Set signal based on vwap difference
     df['slope_vwap'] = np.where(vwap_diff > 0, 1, 0)
-
 
     return df
 
+
 def getHigherLows(data: np.array, order=5, K=2):
-  '''
-  Finds consecutive higher lows in price pattern.
-  Must not be exceeded within the number of periods indicated by the width
-  parameter for the value to be confirmed.
-  K determines how many consecutive lows need to be higher.
-  '''
-  # Get lows
-  low_idx = argrelextrema(data, np.less, order=order)[0]
-  lows = data[low_idx]
-  # Ensure consecutive lows are higher than previous lows
-  extrema = []
-  ex_deque = deque(maxlen=K)
-  for i, idx in enumerate(low_idx):
-    if i == 0:
-      ex_deque.append(idx)
-      continue
-    if lows[i] < lows[i-1]:
-      ex_deque.clear()
+    """
+    Find consecutive higher lows in a price pattern.
+    :param data: Array containing price data.
+    :param order: Number of periods to consider for each local extremum.
+    :param K: Number of consecutive higher lows required.
+    :return: List of higher lows.
+    """
+    low_idx = argrelextrema(data, np.less, order=order)[0]
+    lows = data[low_idx]
+    extrema = []
+    ex_deque = deque(maxlen=K)
+    for i, idx in enumerate(low_idx):
+        if i == 0:
+            ex_deque.append(idx)
+            continue
+        if lows[i] < lows[i - 1]:
+            ex_deque.clear()
 
-    ex_deque.append(idx)
-    if len(ex_deque) == K:
-      extrema.append(ex_deque.copy())
+        ex_deque.append(idx)
+        if len(ex_deque) == K:
+            extrema.append(ex_deque.copy())
 
-  return extrema
+    return extrema
+
 
 def getLowerHighs(data: np.array, order=5, K=2):
-  '''
-  Finds consecutive lower highs in price pattern.
-  Must not be exceeded within the number of periods indicated by the width
-  parameter for the value to be confirmed.
-  K determines how many consecutive highs need to be lower.
-  '''
-  # Get highs
-  high_idx = argrelextrema(data, np.greater, order=order)[0]
-  highs = data[high_idx]
-  # Ensure consecutive highs are lower than previous highs
-  extrema = []
-  ex_deque = deque(maxlen=K)
-  for i, idx in enumerate(high_idx):
-    if i == 0:
-      ex_deque.append(idx)
-      continue
-    if highs[i] > highs[i-1]:
-      ex_deque.clear()
+    """
+    Find consecutive lower highs in a price pattern.
+    :param data: Array containing price data.
+    :param order: Number of periods to consider for each local extremum.
+    :param K: Number of consecutive lower highs required.
+    :return: List of lower highs.
+    """
+    high_idx = argrelextrema(data, np.greater, order=order)[0]
+    highs = data[high_idx]
+    extrema = []
+    ex_deque = deque(maxlen=K)
+    for i, idx in enumerate(high_idx):
+        if i == 0:
+            ex_deque.append(idx)
+            continue
+        if highs[i] > highs[i - 1]:
+            ex_deque.clear()
 
-    ex_deque.append(idx)
-    if len(ex_deque) == K:
-      extrema.append(ex_deque.copy())
+        ex_deque.append(idx)
+        if len(ex_deque) == K:
+            extrema.append(ex_deque.copy())
 
-  return extrema
+    return extrema
+
 
 def getHigherHighs(data: np.array, order=5, K=2):
-  '''
-  Finds consecutive higher highs in price pattern.
-  Must not be exceeded within the number of periods indicated by the width
-  parameter for the value to be confirmed.
-  K determines how many consecutive highs need to be higher.
-  '''
-  # Get highs
-  high_idx = argrelextrema(data, np.greater, order=5)[0]
-  highs = data[high_idx]
-  # Ensure consecutive highs are higher than previous highs
-  extrema = []
-  ex_deque = deque(maxlen=K)
-  for i, idx in enumerate(high_idx):
-    if i == 0:
-      ex_deque.append(idx)
-      continue
-    if highs[i] < highs[i-1]:
-      ex_deque.clear()
+    """
+    Find consecutive higher highs in a price pattern.
+    :param data: Array containing price data.
+    :param order: Number of periods to consider for each local extremum.
+    :param K: Number of consecutive higher highs required.
+    :return: List of higher highs.
+    """
+    high_idx = argrelextrema(data, np.greater, order=5)[0]
+    highs = data[high_idx]
+    extrema = []
+    ex_deque = deque(maxlen=K)
+    for i, idx in enumerate(high_idx):
+        if i == 0:
+            ex_deque.append(idx)
+            continue
+        if highs[i] < highs[i - 1]:
+            ex_deque.clear()
 
-    ex_deque.append(idx)
-    if len(ex_deque) == K:
-      extrema.append(ex_deque.copy())
+        ex_deque.append(idx)
+        if len(ex_deque) == K:
+            extrema.append(ex_deque.copy())
 
-  return extrema
+    return extrema
+
 
 def getLowerLows(data: np.array, order=5, K=2):
-  '''
-  Finds consecutive lower lows in price pattern.
-  Must not be exceeded within the number of periods indicated by the width
-  parameter for the value to be confirmed.
-  K determines how many consecutive lows need to be lower.
-  '''
-  # Get lows
-  low_idx = argrelextrema(data, np.less, order=order)[0]
-  lows = data[low_idx]
-  # Ensure consecutive lows are lower than previous lows
-  extrema = []
-  ex_deque = deque(maxlen=K)
-  for i, idx in enumerate(low_idx):
-    if i == 0:
-      ex_deque.append(idx)
-      continue
-    if lows[i] > lows[i-1]:
-      ex_deque.clear()
+    """
+    Find consecutive lower lows in a price pattern.
+    :param data: Array containing price data.
+    :param order: Number of periods to consider for each local extremum.
+    :param K: Number of consecutive lower lows required.
+    :return: List of lower lows.
+    """
+    low_idx = argrelextrema(data, np.less, order=order)[0]
+    lows = data[low_idx]
+    extrema = []
+    ex_deque = deque(maxlen=K)
+    for i, idx in enumerate(low_idx):
+        if i == 0:
+            ex_deque.append(idx)
+            continue
+        if lows[i] > lows[i - 1]:
+            ex_deque.clear()
 
-    ex_deque.append(idx)
-    if len(ex_deque) == K:
-      extrema.append(ex_deque.copy())
+        ex_deque.append(idx)
+        if len(ex_deque) == K:
+            extrema.append(ex_deque.copy())
 
-  return extrema
+    return extrema
 
 
 def plot_stock_with_ema_sma(df):
+    """
+    Plot stock prices with 50EMA and 200SMA.
+    :param df: DataFrame containing price and moving average data.
+    """
     plt.figure(figsize=(12, 6))
 
-    # Plot close prices
     plt.plot(df['close'], label='Close Price', color='black', linewidth=1.2)
-
-    # Plot 50EMA
     plt.plot(df['50EMA'], label='50EMA', color='blue', linestyle='--', linewidth=1)
-
-    # Plot 200SMA
     plt.plot(df['200SMA'], label='200SMA', color='red', linestyle='--', linewidth=1)
 
-    # Add labels and title
     plt.title('Stock Price with 50EMA and 200SMA')
     plt.xlabel('Date')
     plt.ylabel('Price')
     plt.legend()
-
-    # Show the plot
     plt.show()
 
 
 def TPSL(df, longest_MA_window=200):
+    """
+    Calculate Take Profit and Stop Loss (TPSL) for a given DataFrame.
+    :param df: DataFrame containing price data.
+    :param longest_MA_window: Window for the longest moving average.
+    :return: DataFrame with TPSL values.
+    """
     num_rows_in_df = df.shape[0]
     df['Exit Loss'] = 0
     df["Exit Price"] = 0
@@ -790,20 +881,15 @@ def TPSL(df, longest_MA_window=200):
     df['Long_lost'] = 0
     df['Short_lost'] = 0
 
-    # reward:risk ratio
-    reward = 3 # Assuming 1 for simplicity
+    reward = 3  # Reward to risk ratio
     risk = 2
 
-    # loop through the dataframe
     for j in range(longest_MA_window, num_rows_in_df):
         entry = df["close"].iloc[j]
         atr = df["ATR"].iloc[j]
 
-        # For long positions
         long_stop_loss = entry - (risk * atr)
         long_take_profit = entry + (reward * atr)
-
-        # For short positions
         short_stop_loss = entry + (risk * atr)
         short_take_profit = entry - (reward * atr)
 
@@ -811,12 +897,12 @@ def TPSL(df, longest_MA_window=200):
         b = True
         df['Long_lost'].iloc[j] = long_stop_loss
         df['Short_lost'].iloc[j] = short_stop_loss
-        # Check for exit conditions
+
         for k in range(j + 1, num_rows_in_df):
             curr_low = df["low"].iloc[k]
             curr_high = df["high"].iloc[k]
 
-            if curr_low <= long_stop_loss or curr_low <= short_take_profit :
+            if curr_low <= long_stop_loss or curr_low <= short_take_profit:
                 a = False
                 if a == False and b == False:
                     break
@@ -839,56 +925,63 @@ def TPSL(df, longest_MA_window=200):
     df = df[longest_MA_window:]
     return df
 
+
 def Bollingerplot(df):
+    """
+    Plot Bollinger Bands with close prices.
+    :param df: DataFrame containing price and Bollinger Band data.
+    """
     plt.figure(figsize=(12, 6))
     plt.plot(df['close'], label='Close Price', color='black', linewidth=1.2)
     plt.plot(df['BB_UPPER'], label='Upper Bollinger Band', color='red', linestyle='--', linewidth=1)
     plt.plot(df['BB_LOWER'], label='Lower Bollinger Band', color='blue', linestyle='--', linewidth=1)
+
     below_lower_band = df[df["Bollinger_Bands_Below_Lower_BB"] == 1]
     plt.scatter(below_lower_band.index, below_lower_band["close"], c='blue', marker='o', label='Close Below Lower Band')
 
-    # Scatter plot for points above the upper band
     above_upper_band = df[df["Bollinger_Bands_Above_Upper_BB"] == 1]
     plt.scatter(above_upper_band.index, above_upper_band["close"], c='red', marker='o', label='Close Above Upper Band')
 
     plt.title('Bollinger Bands and Close Price')
-    plt.xlabel('time')
+    plt.xlabel('Time')
     plt.ylabel('Price')
     plt.legend()
     plt.show()
 
+
 def plot_supertrend_with_signals(df1):
+    """
+    Plot Supertrend signals with close prices.
+    :param df1: DataFrame containing price and Supertrend data.
+    """
     plt.figure(figsize=(12, 6))
 
-    # Plot Close Prices
     plt.plot(df1['close'], label='Close Price', color='black', linewidth=1.2)
-
-    # Plot 'ut' values in green
     plt.scatter(df1.index, df1['upt'], color='green', linestyle='--', linewidth=1, label='Uptrend Signal')
+    plt.scatter(df1.index, df1['dt'], color='red', linestyle='--', linewidth=1, label='Downtrend Signal')
 
-    # Plot 'dt' values in red
-    plt.scatter(df1.index, df1['dt'], color='red',linestyle='--', linewidth=1, label='Downtrend Signal')
-
-    # Show the plot
     plt.title('Close Price with Uptrend and Downtrend Signals')
     plt.xlabel('Time')
     plt.ylabel('Price')
     plt.legend()
     plt.show()
 
+
 def get_resistance_support2(df):
+    """
+    Identify support and resistance levels.
+    :param df: DataFrame containing price data.
+    :return: List of tuples containing support and resistance levels.
+    """
     pivots = []
     max_list = []
     min_list = []
     for i in range(10, len(df) - 10):
-        # taking a window of 9 candles
         high_range = df['high'][i - 10:i]
         current_max = high_range.max()
-        # if we find a new maximum value, empty the max_list
         if current_max not in max_list:
             max_list = []
         max_list.append(current_max)
-        # if the maximum value remains the same after shifting 5 times
         if len(max_list) == 5 and SupportResistance.is_far_from_level(current_max, pivots, df):
             pivots.append((high_range.idxmax(), current_max))
 
@@ -902,21 +995,41 @@ def get_resistance_support2(df):
 
     return pivots
 
+
 def distance_to_close_supres(pivots, df):
+    """
+    Calculate distance from price to nearest support or resistance level.
+    :param pivots: DataFrame containing support and resistance levels.
+    :param df: DataFrame containing price data.
+    :return: DataFrame with distance to nearest pivot level.
+    """
     pivots = pd.DataFrame(pivots)
     df['closest_pivot'] = df.apply(lambda row: min(pivots[1], key=lambda x: abs(x - row['high'])), axis=1)
     df['distancebetweenpivot'] = abs(df['closest_pivot'] - df['high'])
     return df
 
+
 def plot_all_resistance_support(levels, df):
+    """
+    Plot all identified support and resistance levels with close prices.
+    :param levels: List of tuples containing support and resistance levels.
+    :param df: DataFrame containing price data.
+    """
     fig, ax = plt.subplots(figsize=(16, 9))
-    plt.plot(range(len(df)),df['close'])
+    plt.plot(range(len(df)), df['close'])
     for level in levels:
-        plt.hlines(level[1], xmin = level[0], xmax =
-        max(range(len(df))), colors='blue', linestyle='--')
+        plt.hlines(level[1], xmin=level[0], xmax=max(range(len(df))), colors='blue', linestyle='--')
     plt.show()
 
-def ADX_data(df, adx_period = 14, plot=False):
+
+def ADX_data(df, adx_period=14, plot=False):
+    """
+    Calculate ADX data for a given DataFrame.
+    :param df: DataFrame containing price data.
+    :param adx_period: Period for ADX calculation.
+    :param plot: Boolean to indicate whether to plot the ADX data.
+    :return: DataFrame with ADX values.
+    """
     df['ADX'] = pd.DataFrame(get_adx(df['high'], df['low'], df['close'], adx_period)[2]).rename(columns={0: 'ADX'})
     df['PLUS_DI'] = pd.DataFrame(get_adx(df['high'], df['low'], df['close'], adx_period)[0]).rename(
         columns={0: 'PLUS_DI'})
@@ -927,7 +1040,12 @@ def ADX_data(df, adx_period = 14, plot=False):
         plot_adx(df)
     return df
 
+
 def plot_adx(df):
+    """
+    Plot ADX with close prices.
+    :param df: DataFrame containing price and ADX data.
+    """
     ax1 = plt.subplot2grid((11, 1), (0, 0), rowspan=5, colspan=1)
     ax2 = plt.subplot2grid((11, 1), (6, 0), rowspan=5, colspan=1)
     ax1.plot(df['close'], linewidth=3, color='#ff9800', alpha=0.6)
@@ -940,17 +1058,14 @@ def plot_adx(df):
     ax2.set_title('df ADX 14')
     plt.show()
 
+
 def chaikin_oscillator(data, fast_period=3, slow_period=10):
     """
-    Calculates the Chaikin Oscillator for a given DataFrame.
-
-    Parameters:
-        data (DataFrame): DataFrame containing at least 'high', 'low', 'close', and 'volume' columns.
-        fast_period (int): Number of periods for the fast EMA.
-        slow_period (int): Number of periods for the slow EMA.
-
-    Returns:
-        Series: Chaikin Oscillator values.
+    Calculate the Chaikin Oscillator for a given DataFrame.
+    :param data: DataFrame containing price and volume data.
+    :param fast_period: Number of periods for the fast EMA.
+    :param slow_period: Number of periods for the slow EMA.
+    :return: Series with Chaikin Oscillator values.
     """
     adl = ((2 * data['close'] - data['low'] - data['high']) / (data['high'] - data['low'])) * data['tick_volume']
     adl = adl.cumsum()
@@ -962,14 +1077,29 @@ def chaikin_oscillator(data, fast_period=3, slow_period=10):
 
     return chaikin_oscillator
 
+
 def CCI(df, ndays=14):
+    """
+    Calculate the Commodity Channel Index (CCI) for a given DataFrame.
+    :param df: DataFrame containing price data.
+    :param ndays: Number of periods for the CCI calculation.
+    :return: DataFrame with CCI values.
+    """
     df['TP'] = (df['high'] + df['low'] + df['close']) / 3
     df['sma'] = df['TP'].rolling(ndays).mean()
     df['mad'] = df['TP'].rolling(window=ndays).apply(lambda x: (x - x.mean()).abs().mean())
     df['CCI'] = (df['TP'] - df['sma']) / (0.015 * df['mad'])
     return df
 
+
 def channel(df, lookback, threshold):
+    """
+    Calculate price channels for a given DataFrame.
+    :param df: DataFrame containing price data.
+    :param lookback: Lookback period for channel calculation.
+    :param threshold: Threshold for determining signals.
+    :return: DataFrame with channel signals.
+    """
     df['Low_Signal'] = 0
     df['High_Signal'] = 0
     df['upper'] = df['close'].rolling(lookback).max().shift(1)
@@ -977,68 +1107,91 @@ def channel(df, lookback, threshold):
     low_abs = abs(df['lower'] - df['low'])
     approach_signal1 = (low_abs <= threshold)
     df['Low_Signal'] = np.where(approach_signal1, 1, 0)
-    df['High_break'] = np.where(df['close'] > df['upper'], 1,0)
+    df['High_break'] = np.where(df['close'] > df['upper'], 1, 0)
 
     high_abs = abs(df['upper'] - df['high'])
     approach_signal = (high_abs <= threshold)
     df['High_Signal'] = np.where(approach_signal, 1, 0)
     df['Low_break'] = np.where(df['close'] < df['lower'], 1, 0)
 
-
     return df
 
+
 def Linreg(df):
+    """
+    Calculate linear regression for a given DataFrame.
+    :param df: DataFrame containing price data.
+    :return: DataFrame with linear regression values.
+    """
     df['Linreg'] = tap.linreg(df['close'], length=14)
     df['Linreg_signal'] = np.where(df['close'] > df['Linreg'], 1, 0)
     return df
 
-def German(df, historical_period, scaling_factor=1.0):
 
+def German(df, historical_period, scaling_factor=1.0):
+    """
+    Calculate Garman-Klass volatility for a given DataFrame.
+    :param df: DataFrame containing price data.
+    :param historical_period: Number of periods for historical volatility calculation.
+    :param scaling_factor: Scaling factor for volatility threshold.
+    :return: DataFrame with Garman-Klass volatility values.
+    """
     df['garman_klass_vol'] = ((np.log(df['high']) - np.log(df['low'])) ** 2) / 2 - (2 * np.log(2) - 1) * (
                 (np.log(df['close']) - np.log(df['open'])) ** 2)
 
     historical_volatility = df['garman_klass_vol'].tail(historical_period)
-    # Compute statistical measure (e.g., median) of historical volatility
-    volatility_threshold = historical_volatility.median()  # You can also use mean, median, or other statistical measures
-    # Optionally, apply scaling factor to adjust the threshold
-    volatility_threshold *= scaling_factor
+    volatility_threshold = historical_volatility.median() * scaling_factor
 
     df['prev_volatility'] = df['garman_klass_vol'].shift(1)
-    df['volatility_breakout_signal'] = (df['garman_klass_vol'] > volatility_threshold) & \
-                                       (df['garman_klass_vol'] > df['prev_volatility'])
-    df['long_signal1'] = np.where((df['close'] > df['high'].shift(1)) & df['volatility_breakout_signal'], 1,0)
-    df['short_signal1'] = np.where((df['close'] < df['low'].shift(1)) & df['volatility_breakout_signal'],1,0)
+    df['volatility_breakout_signal'] = (df['garman_klass_vol'] > volatility_threshold) & (
+                df['garman_klass_vol'] > df['prev_volatility'])
+    df['long_signal1'] = np.where((df['close'] > df['high'].shift(1)) & df['volatility_breakout_signal'], 1, 0)
+    df['short_signal1'] = np.where((df['close'] < df['low'].shift(1)) & df['volatility_breakout_signal'], 1, 0)
     df['German_signal'] = np.where(df['garman_klass_vol'] > volatility_threshold, 1, 0)
     return df
 
+
 def MACD2(df):
+    """
+    Calculate MACD for a given DataFrame.
+    :param df: DataFrame containing price data.
+    :return: DataFrame with MACD values.
+    """
     macd1 = tap.macd(df.close)
     df['MACD1'], df['MACD_signal'], df['MACD_hist'] = macd1.iloc[:, 0], macd1.iloc[:, 1], macd1.iloc[:, 2]
     df['TotalSignal'] = df.apply(lambda row: total_signal(df, row.name) if row.name != 0 else 0, axis=1)
     return df
 
+
 def total_signal(df, current_candle):
+    """
+    Calculate total signal based on MACD.
+    :param df: DataFrame containing price data and MACD values.
+    :param current_candle: Current candle index.
+    :return: Total signal value.
+    """
     macd_values_3_2 = df.loc[current_candle - 3:current_candle - 2, "MACD1"]
     macd_values_1 = df.loc[current_candle - 1:current_candle, "MACD1"]
     macd_signal_values_3_2 = df.loc[current_candle - 3:current_candle - 2, "MACD_signal"]
     macd_signal_values_1 = df.loc[current_candle - 1:current_candle, "MACD_signal"]
 
-    if (all(macd_values_3_2 < macd_signal_values_3_2) and
-            all(macd_values_1 > macd_signal_values_1)
-    ):
+    if (all(macd_values_3_2 < macd_signal_values_3_2) and all(macd_values_1 > macd_signal_values_1)):
         return 1
-    elif (all(macd_values_3_2 > macd_signal_values_3_2) and
-          all(macd_values_1 < macd_signal_values_1)
-    ):
+    elif (all(macd_values_3_2 > macd_signal_values_3_2) and all(macd_values_1 < macd_signal_values_1)):
         return -1
     else:
         return 0
 
+
 def HH_HL_LL_LH(df):
+    """
+    Identify higher highs, higher lows, lower highs, and lower lows.
+    :param df: DataFrame containing price data.
+    :return: DataFrame with identified levels.
+    """
     from matplotlib.lines import Line2D
 
     colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
-
     close = df['close'].values
     dates = df.index
 
@@ -1071,7 +1224,6 @@ def HH_HL_LL_LH(df):
     for i, (start, end) in enumerate(hl):
         df.loc[end, 'hl'] = 1
 
-
     for index, row in df.iterrows():
         if row['hh'] == 1:
             start_index = index + 5
@@ -1102,7 +1254,6 @@ def HH_HL_LL_LH(df):
             end_index = index + 5
             df.loc[start_index:end_index + 1, 'hl_signal'] = 1
 
-
     plt.figure(figsize=(15, 8))
     plt.plot(df['close'])
     _ = [plt.plot(dates[i], close[i], c=colors[1]) for i in hh]
@@ -1120,13 +1271,18 @@ def HH_HL_LL_LH(df):
         Line2D([0], [0], color=colors[4], label='Lower Highs')
     ]
     plt.legend(handles=legend_elements)
-    #pd.set_option('display.max_rows', None)
-    print(print(df[['ll', 'll_signal', 'hl', 'hl_signal','hh','hh_signal','lh','lh_signal']].tail(100)))
- #plt.show()
+    print(df[['ll', 'll_signal', 'hl', 'hl_signal', 'hh', 'hh_signal', 'lh', 'lh_signal']].tail(100))
+    #plt.show()
 
     return df
 
+
 def set_time_vwap(df):
+    """
+    Set the time index and calculate VWAP for a given DataFrame.
+    :param df: DataFrame containing price and volume data.
+    :return: DataFrame with VWAP values.
+    """
     df['time'] = df['time'].apply(lambda x: datetime.datetime.fromtimestamp(x).strftime('%Y-%m-%d %H:%M:%S'))
     df = df.set_index('time')
 
@@ -1137,7 +1293,13 @@ def set_time_vwap(df):
     df['vwap'] = det
     return df
 
+
 def set_prev(df):
+    """
+    Set previous period values for a given DataFrame.
+    :param df: DataFrame containing price data.
+    :return: DataFrame with previous period values.
+    """
     df['prev_high'] = df['high'].shift(1)
     df['prev_low'] = df['low'].shift(1)
     df['prev_close'] = df['close'].shift(1)
@@ -1148,16 +1310,17 @@ def set_prev(df):
     df['OC'] = df['open'] - df['prev_close']
     return df
 
+
 def optimize_random_state(discrete_X, discrete_y, split):
-    # Array of random_state values from -100 to 100
+    """
+    Optimize the random state for undersampling.
+    :param discrete_X: DataFrame containing feature data.
+    :param discrete_y: Series containing target data.
+    :param split: Index to split the data into training and testing sets.
+    :return: Best random state.
+    """
     random_states = np.arange(start=0, stop=101)
-
-    # Initialize a list where we'll store the score of each random_state
     scores = []
-
-    # Your data and model training process
-    # Assuming discrete_X and discrete_y are your features and target respectively
-    # Assuming split is defined earlier
 
     for state in random_states:
         discrete_X_train = discrete_X.iloc[:split]
@@ -1170,31 +1333,19 @@ def optimize_random_state(discrete_X, discrete_y, split):
         undersampled_discrete_X_train, undersampled_discrete_y_train = discrete_rus.fit_resample(discrete_X_train,
                                                                                                  discrete_y_train)
 
-        # Create the decision tree classifier instance
         rf_model = tree.DecisionTreeClassifier(random_state=state)
-
         rf_model = rf_model.fit(undersampled_discrete_X_train, undersampled_discrete_y_train)
 
         predictions = rf_model.predict(discrete_X_test)
-
-        # Use the trained model to predict the trading signals for the training data
         rf_training_signal_predictions = rf_model.predict(undersampled_discrete_X_train)
-
         rf_training_report = classification_report(undersampled_discrete_y_train, rf_training_signal_predictions)
 
-        # Use the trained model to predict the trading signals for the testing data.
         rf_testing_signal_predictions = rf_model.predict(discrete_X_test)
-
-        # Evaluate the model's ability to predict the trading signal for the testing data
         rf_testing_report = classification_report(discrete_y_test, rf_testing_signal_predictions)
 
-        # Record the score for this random state
         scores.append(rf_model.score(discrete_X_test, discrete_y_test))
 
-    # Put the random states and scores into a pandas DataFrame
     results = pd.DataFrame({'random_state': random_states, 'score': scores})
-
-    # Find the random state with the highest score
     best_random_state = results.loc[results['score'].idxmax()]
 
     print("Best random state:", best_random_state['random_state'])
@@ -1202,29 +1353,34 @@ def optimize_random_state(discrete_X, discrete_y, split):
 
     return int(best_random_state['random_state'])
 
-def Machinelearning(df, filtered_df, discrete_X, discrete_y, discrete_X_train,discrete_y_train, discrete_X_test, discrete_y_test, split, best_random_state):
 
-
+def Machinelearning(df, filtered_df, discrete_X, discrete_y, discrete_X_train, discrete_y_train, discrete_X_test,
+                    discrete_y_test, split, best_random_state):
+    """
+    Perform machine learning on the given data.
+    :param df: DataFrame containing price data.
+    :param filtered_df: DataFrame containing filtered data.
+    :param discrete_X: DataFrame containing feature data.
+    :param discrete_y: Series containing target data.
+    :param discrete_X_train: Training feature data.
+    :param discrete_y_train: Training target data.
+    :param discrete_X_test: Testing feature data.
+    :param discrete_y_test: Testing target data.
+    :param split: Index to split the data into training and testing sets.
+    :param best_random_state: Best random state for the model.
+    :return: DataFrames with machine learning results.
+    """
     discrete_rus = RandomUnderSampler(random_state=best_random_state)
     undersampled_discrete_X_train, undersampled_discrete_y_train = discrete_rus.fit_resample(discrete_X_train,
                                                                                              discrete_y_train)
 
-    # Create the decision tree classifier instance
     rf_model = tree.DecisionTreeClassifier(random_state=best_random_state)
-
     rf_model = rf_model.fit(undersampled_discrete_X_train, undersampled_discrete_y_train)
 
     predictions = rf_model.predict(discrete_X_test)
-
-    # Use the trained model to predict the trading signals for the training data
     rf_training_signal_predictions = rf_model.predict(undersampled_discrete_X_train)
-
     rf_training_report = classification_report(undersampled_discrete_y_train, rf_training_signal_predictions)
-
-    # Use the trained model to predict the trading signals for the testing data.
     rf_testing_signal_predictions = rf_model.predict(discrete_X_test)
-
-    # Evaluate the model's ability to predict the trading signal for the testing data
     rf_testing_report = classification_report(discrete_y_test, rf_testing_signal_predictions)
 
     def calculate_algo_returns(exit_price, close):
@@ -1242,8 +1398,7 @@ def Machinelearning(df, filtered_df, discrete_X, discrete_y, discrete_X_train,di
     rf_predictions_df["Short_lost"] = df['Short_lost']
     rf_predictions_df["close"] = df['close']
 
-
-    #rf_predictions_df2 is for the backtest function
+#ths rf_predictions_df2 is for the backtest
     rf_predictions_df2 = rf_predictions_df.copy()
     rf_predictions_df2["predicted_signal"] = rf_testing_signal_predictions
     rf_predictions_df2 = rf_predictions_df2.reindex(df.index)
@@ -1255,12 +1410,16 @@ def Machinelearning(df, filtered_df, discrete_X, discrete_y, discrete_X_train,di
     rf_predictions_df2['Low'] = df['low']
     rf_predictions_df2.reset_index(inplace=True)
 
-
     rf_predictions_df["actual_returns"] = df["close"].pct_change()
-    rf_predictions_df["algo_returns"] = filtered_df.apply(lambda row: calculate_algo_returns(row["Exit Price"], row["close"]), axis=1)
-
+    rf_predictions_df["algo_returns"] = filtered_df.apply(
+        lambda row: calculate_algo_returns(row["Exit Price"], row["close"]), axis=1)
 
     def calculate_algorithm_return(row):
+        """
+        Calculate the algorithm return based on exit and signal values.
+        :param row: Row of DataFrame containing exit and signal values.
+        :return: Calculated return.
+        """
         if row['predicted_signal'] == row['Exit'] and row['predicted_signal'] != 0:
             return (row['Exit Price'] - row['close']) / row['close']
         elif row['Exit'] != 0 and row['predicted_signal'] != row['Exit']:
@@ -1273,7 +1432,6 @@ def Machinelearning(df, filtered_df, discrete_X, discrete_y, discrete_X_train,di
             return 0
         else:
             return None
-
 
     rf_predictions_df['algorithm_return_new'] = rf_predictions_df.apply(calculate_algorithm_return, axis=1)
     rf_predictions_df["trading_algorithm_returns_new"] = np.where(
@@ -1289,11 +1447,10 @@ def Machinelearning(df, filtered_df, discrete_X, discrete_y, discrete_X_train,di
             rf_predictions_df["algo_returns"] * rf_predictions_df["predicted_signal"]
     )
 
-    # Review the DataFrame
+    # Plot the returns
     (1 + rf_predictions_df[["actual_returns", "trading_algorithm_returns_new"]]).cumprod().plot(
         title='RF Actual vs Algo Returns')
-    plt.savefig(f'_rf_vs_act_returns', facecolor='white', edgecolor='white', transparent='false',
-                bbox_inches='tight')
+    plt.savefig('_rf_vs_act_returns', facecolor='white', edgecolor='white', transparent='false', bbox_inches='tight')
 
     df["daily returns"] = df["close"].pct_change()
 
@@ -1306,10 +1463,14 @@ def Machinelearning(df, filtered_df, discrete_X, discrete_y, discrete_X_train,di
 
     return df, rf_predictions_df, rf_predictions_df2
 
-
 def Backtest(rf_predictions_df2):
-    from backtesting import Strategy
-    from backtesting import Backtest
+    """
+    Perform backtesting on the given data.
+    :param rf_predictions_df2: DataFrame containing predictions and price data.
+    :return: Backtest statistics.
+    """
+    from backtesting import Strategy, Backtest
+
     def SIGNAL():
         return rf_predictions_df2.predicted_signal
 
@@ -1321,7 +1482,6 @@ def Backtest(rf_predictions_df2):
         def init(self):
             super().init()
             self.signal = self.I(SIGNAL)
-            # df['RSI']=ta.rsi(df.Close, length=self.rsi_length)
 
         def next(self):
             super().next()
@@ -1332,7 +1492,6 @@ def Backtest(rf_predictions_df2):
                 sl1 = self.data.Close[-1] - slatr
                 tp1 = self.data.Close[-1] + slatr * TPSLRatio
                 self.buy(sl=sl1, tp=tp1, size=self.mysize)
-
             elif self.signal == -1:
                 sl1 = self.data.Close[-1] + slatr
                 tp1 = self.data.Close[-1] - slatr * TPSLRatio
@@ -1344,4 +1503,3 @@ def Backtest(rf_predictions_df2):
     print(stats)
 
     return bt
-
