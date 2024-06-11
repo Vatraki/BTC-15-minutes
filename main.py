@@ -59,7 +59,7 @@ if __name__ == '__main__':
     df = mt5_lib.get_candlesticks(
         symbol=symbol,
         timeframe=timeframe,
-        number_of_candles=1000)
+        number_of_candles=90000)
 
     # List of discrete features for analysis
     discrete_features = [
