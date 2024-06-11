@@ -8,7 +8,6 @@ from pandas import DataFrame  # Importing DataFrame directly from pandas
 import matplotlib.pyplot as plt  # Importing matplotlib for plotting
 from sklearn.metrics import classification_report  # Importing classification report from sklearn
 from finta import TA  # Importing technical analysis functions from finta
-import SupportResistance  # Importing custom module SupportResistance
 from collections import deque  # Importing deque from collections for optimized list operations
 from scipy.signal import argrelextrema  # Importing function to find local extrema from scipy
 import pandas_ta as tap  # Importing pandas_ta for technical analysis
@@ -982,7 +981,7 @@ def get_resistance_support2(df):
         if current_max not in max_list:
             max_list = []
         max_list.append(current_max)
-        if len(max_list) == 5 and SupportResistance.is_far_from_level(current_max, pivots, df):
+        if len(max_list) == 5 and is_far_from_level(current_max, pivots, df):
             pivots.append((high_range.idxmax(), current_max))
 
         low_range = df['low'][i - 10:i]
@@ -990,7 +989,7 @@ def get_resistance_support2(df):
         if current_min not in min_list:
             min_list = []
         min_list.append(current_min)
-        if len(min_list) == 5 and SupportResistance.is_far_from_level(current_min, pivots, df):
+        if len(min_list) == 5 and is_far_from_level(current_min, pivots, df):
             pivots.append((low_range.idxmin(), current_min))
 
     return pivots
@@ -1503,3 +1502,25 @@ def Backtest(rf_predictions_df2):
     print(stats)
 
     return bt
+
+
+def is_support(df,i):
+  cond1 = df['low'][i] < df['low'][i-1]
+  cond2 = df['low'][i] < df['low'][i+1]
+  cond3 = df['low'][i+1] < df['low'][i+2]
+  cond4 = df['low'][i-1] < df['low'][i-2]
+  return (cond1 and cond2 and cond3 and cond4)
+
+def is_resistance(df,i):
+  cond1 = df['high'][i] > df['high'][i-1]
+  cond2 = df['high'][i] > df['high'][i+1]
+  cond3 = df['high'][i+1] > df['high'][i+2]
+  cond4 = df['high'][i-1] > df['high'][i-2]
+  return (cond1 and cond2 and cond3 and cond4)
+
+
+def is_far_from_level(value, levels, df):
+  ave =  np.mean(df['high'] - df['low'])
+  return np.sum([abs(value-level)<ave for _,level in levels])==0
+
+
