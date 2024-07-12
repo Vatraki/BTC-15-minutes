@@ -104,7 +104,7 @@ if __name__ == '__main__':
         filtered_df = pd.read_pickle('filtered_dataset.pkl')
         df = pd.read_pickle('df.pkl')
 
-    print("Filtered data loaded")
+    print("Filtered data loaded!")
 
     # Print exit signal counts
     print(filtered_df["Exit"].value_counts())
