@@ -97,6 +97,8 @@ if __name__ == '__main__':
         df.to_pickle('df.pkl')
         filtered_df = df[((df['Bollinger_Bands_Above_Upper_BB'] != 0) | (df['Bollinger_Bands_Below_Lower_BB'] != 0))]
         filtered_df.to_pickle('filtered_dataset.pkl')
+        filtered_df.to_csv('filtered_dataset.csv', index=False)
+        df.to_csv('df_dataset.csv', index=False)
         print(filtered_df)
     except Exception as e:
         print(f"Error: {e}")
